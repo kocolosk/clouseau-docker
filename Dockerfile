@@ -1,4 +1,9 @@
-FROM registry.redhat.io/ubi8/ubi-minimal
+FROM maven
+RUN git clone --depth=1 https://github.com/cloudant-labs/clouseau && \
+    cd clouseau && \
+    mvn dependency:copy-dependencies
+
+FROM registry.access.redhat.com/ubi8/ubi-minimal
 
 ARG VERSION=2.17.0
 ARG APP_ROOT=/opt/couchdb-search
@@ -13,7 +18,7 @@ RUN microdnf install java-1.8.0-openjdk-headless && \
 RUN mkdir -p ${APP_ROOT}/etc ${APP_ROOT}/lib ${APP_ROOT}/data
 COPY clouseau.ini log4j.properties jmxremote.password ${APP_ROOT}/etc/
 COPY clouseau-${VERSION}.jar ${APP_ROOT}/lib/
-COPY target/dependency/*.jar ${APP_ROOT}/lib/
+COPY --from=0 /clouseau/target/dependency/*.jar ${APP_ROOT}/lib/
 
 RUN chgrp -R 0 ${APP_ROOT} && \
     chmod -R g=u ${APP_ROOT} && \
