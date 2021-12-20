@@ -1,6 +1,6 @@
-FROM registry.redhat.io/ubi8/ubi-minimal
+FROM redhat/ubi8-minimal
 
-ARG VERSION=2.17.0
+ARG VERSION=2.20.1
 ARG APP_ROOT=/opt/couchdb-search
 
 ENV JAVA_MAJOR_VERSION=8 \
@@ -11,7 +11,7 @@ RUN microdnf install java-1.8.0-openjdk-headless && \
     microdnf clean all
 
 RUN mkdir -p ${APP_ROOT}/etc ${APP_ROOT}/lib ${APP_ROOT}/data
-COPY clouseau.ini log4j.properties jmxremote.password ${APP_ROOT}/etc/
+COPY clouseau.ini jmxremote.password ${APP_ROOT}/etc/
 COPY clouseau-${VERSION}.jar ${APP_ROOT}/lib/
 COPY target/dependency/*.jar ${APP_ROOT}/lib/
 
@@ -37,7 +37,6 @@ CMD [ \
     # "-Dcom.sun.management.jmxremote.authenticate=true", \
     # "-Dcom.sun.management.jmxremote.password.file=/opt/couchdb-search/etc/jmxremote.password", \
     "-Dcom.sun.management.jmxremote.ssl=false", \
-    "-Dlog4j.configuration=file:/opt/couchdb-search/etc/log4j.properties", \
     "-XX:OnOutOfMemoryError=\"kill -9 %p\"", \
     "-XX:+UseConcMarkSweepGC", \
     "-XX:+CMSParallelRemarkEnabled", \
