@@ -1,19 +1,25 @@
 FROM registry.redhat.io/ubi8/ubi-minimal
 
-ARG VERSION=2.17.0
+ARG VERSION=2.21.6
 ARG APP_ROOT=/opt/couchdb-search
 
 ENV JAVA_MAJOR_VERSION=8 \
     JAVA_HOME=/usr/lib/jvm/jre-1.8.0 \
-    CLASSPATH=${APP_ROOT}/lib/*
+    CLASSPATH=${APP_ROOT}/lib/* \
+    SLF4J_VERSION=2.0.7
 
 RUN microdnf install java-1.8.0-openjdk-headless && \
     microdnf clean all
 
 RUN mkdir -p ${APP_ROOT}/etc ${APP_ROOT}/lib ${APP_ROOT}/data
-COPY clouseau.ini log4j.properties jmxremote.password ${APP_ROOT}/etc/
+COPY clouseau.ini jmxremote.password ${APP_ROOT}/etc/
 COPY clouseau-${VERSION}.jar ${APP_ROOT}/lib/
 COPY target/dependency/*.jar ${APP_ROOT}/lib/
+
+RUN rm ${APP_ROOT}/lib/slf4j-api-*
+RUN rm ${APP_ROOT}/lib/slf4j-simple-*
+COPY slf4j-api-${SLF4J_VERSION}.jar ${APP_ROOT}/lib/
+COPy slf4j-simple-${SLF4J_VERSION}.jar ${APP_ROOT}/lib/
 
 RUN chgrp -R 0 ${APP_ROOT} && \
     chmod -R g=u ${APP_ROOT} && \
@@ -37,7 +43,6 @@ CMD [ \
     # "-Dcom.sun.management.jmxremote.authenticate=true", \
     # "-Dcom.sun.management.jmxremote.password.file=/opt/couchdb-search/etc/jmxremote.password", \
     "-Dcom.sun.management.jmxremote.ssl=false", \
-    "-Dlog4j.configuration=file:/opt/couchdb-search/etc/log4j.properties", \
     "-XX:OnOutOfMemoryError=\"kill -9 %p\"", \
     "-XX:+UseConcMarkSweepGC", \
     "-XX:+CMSParallelRemarkEnabled", \
